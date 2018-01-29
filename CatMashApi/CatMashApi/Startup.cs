@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using CatMashApi.Helpers;
+using CatMashApi.Interfaces;
+using CatMashApi.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace CatMashApi
 {
@@ -23,7 +21,23 @@ namespace CatMashApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //configure automapper for json api
+            var config = new AutoMapper.MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new AutoMapperProfile());
+            });
+            var mapper = config.CreateMapper();
+            services.AddSingleton(mapper);
+
+            //Configure mvc
             services.AddMvc();
+
+            //connect to mysql database
+            services.AddDbContext<CatScoreContext>(options =>
+            options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            // configure Dynamic injection for application services
+            services.AddScoped<ICatScoreService, CatScoreService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
